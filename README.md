@@ -79,6 +79,8 @@ c.app :frontend, path: "~/projects/my-ember-app"
 
 - `silent` - this provides `--silent` option for Ember CLI commands to control verbosity of their output.
 
+- `yarn` - enables the [yarn](https://github.com/yarnpkg/yarn) package manager when installing dependencies
+
 ```ruby
 EmberCli.configure do |c|
   c.app :adminpanel # path defaults to `Rails.root.join("adminpanel")`
@@ -130,6 +132,7 @@ end
   `format: :html` requests. Additionally, this will handle child routes as well.
   For instance, mounting `mount_ember_app :frontend, to: "/frontend"` will handle a
   `format: :html` request to `/frontend/posts`.
+  *Note:* If you specify a custom path, you must also update the `rootURL` in `frontend/config/environment.js`. See [Mounting multiple Ember applications](#mounting-multiple-ember-applications) for more information.
 * `controller` - Defaults to `"ember_cli/ember"`
 * `action` - Defaults to `"index"`
 
@@ -169,6 +172,16 @@ task default: [:spec, "ember:test"]
 ```
 
 ## Deploy
+
+When Rails is running in production mode, EmberCLI-Rails stops doing runtime
+compilation. Instead, configured apps are built during `rake assets:precompile`.
+This keeps things quick for end users, and extends the normal Rails asset
+building process.
+
+Configuration information, including instructions for Heroku and Capistrano,
+can be found below.
+
+### CDN
 
 In production environments, assets should be served over a
 Content Delivery Network.
@@ -257,13 +270,13 @@ To configure your EmberCLI-Rails applications for Heroku:
 1. Execute `rails generate ember:heroku`.
 1. Commit the newly generated files.
 1. [Add the NodeJS buildpack][buildpack] and configure NPM to include the
-   `bower` dependency's executable file.
+   `bower` dependency's executable file (if your build process requires
+   `bower`).
 
 ```sh
 $ heroku buildpacks:clear
 $ heroku buildpacks:add --index 1 heroku/nodejs
 $ heroku buildpacks:add --index 2 heroku/ruby
-$ heroku config:set NPM_CONFIG_PRODUCTION=false
 $ heroku config:unset SKIP_EMBER
 ```
 
@@ -273,15 +286,27 @@ You are ready to deploy:
 $ git push heroku master
 ```
 
+EmberCLI compilation happens at deploy-time, triggered by the `asset:precompile` rake task.
+
 **NOTE** Run the generator each time you introduce additional EmberCLI
 applications into the project.
 
 [buildpack]: https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app#adding-a-buildpack
 
+#### Slug size
+
+[Heroku slug size is limited](https://devcenter.heroku.com/articles/slug-compiler#slug-size). The build process creates artifacts that are not necessary for the server to run, but are included in the deployed Heroku slug.
+
+Omitting these build assets can dramatically reduce slug size.
+
+A build-pack solution for this is discussed in [Issue #491][#491].
+
+[#491]: https://github.com/thoughtbot/ember-cli-rails/issues/491
+
 ### Capistrano
 
 EmberCLI-Rails executes both `npm install` and `bower install` during EmberCLI's
-compilation, triggered by the  `asset:precompilation` rake task.
+compilation, triggered by the  `asset:precompile` rake task.
 
 The `npm` and `bower` executables are required to be defined in the deployment
 SSH session's `$PATH`. It is not sufficient to modify the session's `$PATH` in
@@ -304,11 +329,16 @@ contains the directory or directories that contain the `bower` and `npm`
 executables.
 
 #### For faster deployments
-Place the following in your deploy/<environment>.rb 
+
+Place the following in your `deploy/<environment>.rb`
+
 ```ruby
 set :linked_dirs, %w{<ember-app-name>/node_modules <ember-app-name>/bower_components}
 ```
-to avoid rebuilding all the node modules and bower components with every deploy. Replace `<ember-app-name>` with the name of your ember app (default is `frontend`).
+
+to avoid rebuilding all the node modules and bower components with every deploy.
+Replace `<ember-app-name>` with the name of your ember app (default is
+`frontend`).
 
 ## Override
 
@@ -456,7 +486,7 @@ Rails.application.routes.draw do
 end
 ```
 
-Then set each Ember application's `baseURL` to the mount point:
+Then set each Ember application's `rootURL` to the mount point:
 
 ```javascript
 // frontend/config/environment.js
@@ -465,7 +495,7 @@ module.exports = function(environment) {
   var ENV = {
     modulePrefix: 'frontend',
     environment: environment,
-    baseURL: '/',
+    rootURL: '/',
     // ...
   }
 };
@@ -476,7 +506,7 @@ module.exports = function(environment) {
   var ENV = {
     modulePrefix: 'admin_panel',
     environment: environment,
-    baseURL: '/admin_panel',  // originally '/'
+    rootURL: '/admin_panel',  // originally '/'
     // ...
   }
 };
@@ -666,7 +696,7 @@ Jackson][rondale-sc].
 [rondale-sc]: https://github.com/rondale-sc
 [seanpdoyle]: https://github.com/seanpdoyle
 
-![thoughtbot](https://thoughtbot.com/logo.png)
+![thoughtbot](http://presskit.thoughtbot.com/images/thoughtbot-logo-for-readmes.svg)
 
 ember-cli-rails is maintained and funded by thoughtbot, inc.
 The names and logos for thoughtbot are trademarks of thoughtbot, inc.

@@ -1,13 +1,78 @@
 master
 ------
 
+0.9.0
+-----
+
+* Don't require `bower` installation if `bower.json` is missing [#532]
+
+[#532]: https://github.com/thoughtbot/ember-cli-rails/pull/532
+
+0.8.7
+-----
+
+* Revert [`34ff6dd`][reverted-commit] so that it can be reintroduced as a
+  breaking change, [requiring a major version bump][#532-comment]
+
+[reverted-commit]: https://github.com/thoughtbot/ember-cli-rails/commit/34ff6dd
+[#532-comment]: https://github.com/thoughtbot/ember-cli-rails/pull/532#issuecomment-308141408
+
+0.8.6
+-----
+
+* Don't require `bower` installation if `bower.json` is missing [#532]
+
+[#532]: https://github.com/thoughtbot/ember-cli-rails/pull/532
+
+0.8.5
+-----
+
+* Ignore calls to `/rails/mailers`. [#520]
+* Call `render` with `html:` instead of `text:`. [#519]
+* Use `Mime::Type.html?` [#523]
+
+[#520]: https://github.com/thoughtbot/ember-cli-rails/pull/520
+[#519]: https://github.com/thoughtbot/ember-cli-rails/pull/519
+[#523]: https://github.com/thoughtbot/ember-cli-rails/pull/523
+
+0.8.4
+-----
+
+* Execute `bin/heroku_install` through `sh` [#512]
+* Generate `package.json` with `bower` as a `dependencies` value.
+
+[#512]: https://github.com/thoughtbot/ember-cli-rails/pull/512
+
+0.8.3
+-----
+
+* Add support for integrating with `yarn`. [#496]
+
+[#496]: https://github.com/thoughtbot/ember-cli-rails/pull/496
+
+0.8.2.
+------
+
+* Support Rails 5 static file serving configuration. [#499]
+
+[#499]: https://github.com/thoughtbot/ember-cli-rails/pull/499
+
+0.8.1
+-----
+
+* Resolve issues inheriting from `ActionController::API`. [#481]
+
+[#481]: https://github.com/thoughtbot/ember-cli-rails/pull/481
+
 0.8.0
 -----
 
-* `EmberCli::EmberController` now inherits from `ActionController::Base` instead
-  of `ApplicationController`. [#400]
+* `EmberCli::EmberController` no longer assumes `ApplicationController`
+  inherits from`ActionController::Base`. [#400]
 * Remove support for Ruby 2.1.x. [#400]
 * Don't route requests to `/rails/info` through the mounted Ember application.
+
+[#400]: https://github.com/thoughtbot/ember-cli-rails/pull/400
 
 0.7.4
 -----

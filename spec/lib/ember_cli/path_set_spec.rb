@@ -81,12 +81,13 @@ describe EmberCli::PathSet do
   describe "#ember" do
     it "is an executable child of #node_modules" do
       app = build_app
+      path_set = build_path_set(app: app)
       ember_path = rails_root.join(app.name, "node_modules", "ember-cli", "bin", "ember")
       create_executable(ember_path)
 
-      path_set = build_path_set(app: app)
+      ember = path_set.ember
 
-      expect(path_set.ember).to eq ember_path
+      expect(ember).to eq(ember_path).and(be_executable)
     end
 
     it "raises a DependencyError if the file isn't executable" do
@@ -99,31 +100,57 @@ describe EmberCli::PathSet do
   describe "#bower" do
     it "can be overridden" do
       fake_bower = create_executable(ember_cli_root.join("bower"))
-      app = build_app(options: { bower_path: fake_bower })
-
+      app = build_app(options: { bower_path: fake_bower.to_s })
       path_set = build_path_set(app: app)
 
-      expect(path_set.bower).to eq fake_bower
+      bower = path_set.bower
+
+      expect(bower).to eq(fake_bower).and(be_executable)
     end
 
     it "can be inferred from the $PATH" do
       fake_bower = create_executable(ember_cli_root.join("bower"))
-      stub_which(bower: fake_bower)
-
+      stub_which(bower: fake_bower.to_s)
       path_set = build_path_set
 
-      expect(path_set.bower).to eq fake_bower
+      bower = path_set.bower
+
+      expect(bower).to eq(fake_bower).and(be_executable)
     end
 
     context "when it is missing from the $PATH" do
-      it "raises a helpful exception" do
-        stub_which(bower: nil)
+      context "bower.json exists" do
+        it "raises a helpful exception" do
+          create_file(ember_cli_root.join("bower.json"))
+          stub_which(bower: nil)
+          path_set = build_path_set
 
-        path_set = build_path_set
+          expect { path_set.bower }.
+            to raise_error(EmberCli::DependencyError, /bower is required/i)
+        end
 
-        expect { path_set.bower }.
-          to raise_error(EmberCli::DependencyError, /bower is required/i)
+        context "bower.json is missing" do
+          it "returns nil" do
+            stub_which(bower: nil)
+            path_set = build_path_set
+
+            bower = path_set.bower
+
+            expect(bower).to be_nil
+          end
+        end
       end
+    end
+  end
+
+  describe "#bower_json" do
+    it "is a child of #root" do
+      app = build_app(name: "foo")
+      path_set = build_path_set(app: app)
+
+      bower_json = path_set.bower_json
+
+      expect(bower_json).to eq ember_cli_root.join("bower.json")
     end
   end
 
@@ -140,19 +167,58 @@ describe EmberCli::PathSet do
 
   describe "#npm" do
     it "can be overridden" do
-      app = build_app(options: { npm_path: "npm-path" })
-
+      fake_npm = create_executable(ember_cli_root.join("npm"))
+      app = build_app(options: { npm_path: fake_npm.to_s })
       path_set = build_path_set(app: app)
 
-      expect(path_set.npm).to eq "npm-path"
+      npm = path_set.npm
+
+      expect(npm).to eq(fake_npm).and(be_executable)
     end
 
     it "can be inferred from the $PATH" do
-      stub_which(npm: "npm-path")
-
+      fake_npm = create_executable(ember_cli_root.join("npm"))
+      stub_which(npm: fake_npm.to_s)
       path_set = build_path_set
 
-      expect(path_set.npm).to eq "npm-path"
+      npm = path_set.npm
+
+      expect(npm).to eq(fake_npm).and(be_executable)
+    end
+  end
+
+  describe "#yarn" do
+    it "can be overridden" do
+      fake_yarn = create_executable(ember_cli_root.join("yarn"))
+      app = build_app(options: { yarn_path: fake_yarn.to_s })
+      path_set = build_path_set(app: app)
+
+      yarn = path_set.yarn
+
+      expect(yarn).to eq(fake_yarn).and(be_executable)
+    end
+
+    it "can be inferred from the $PATH" do
+      fake_yarn = create_executable(ember_cli_root.join("yarn"))
+      stub_which(yarn: fake_yarn.to_s)
+      app = build_app(options: { yarn: true })
+      path_set = build_path_set(app: app)
+      create_executable(fake_yarn)
+
+      yarn = path_set.yarn
+
+      expect(yarn).to eq(fake_yarn).and(be_executable)
+    end
+
+    context "when the executable isn't installed on the system" do
+      it "returns nil" do
+        stub_which(yarn: nil)
+        path_set = build_path_set
+
+        yarn = path_set.yarn
+
+        expect(yarn).to be_nil
+      end
     end
   end
 
@@ -168,37 +234,45 @@ describe EmberCli::PathSet do
 
   describe "#tee" do
     it "can be overridden" do
-      app = build_app(options: { tee_path: "tee-path" })
-
+      fake_tee = create_executable(rails_root.join("tee"))
+      app = build_app(options: { tee_path: fake_tee.to_s })
       path_set = build_path_set(app: app)
 
-      expect(path_set.tee).to eq "tee-path"
+      tee = path_set.tee
+
+      expect(tee).to eq(fake_tee).and(be_executable)
     end
 
     it "can be inferred from the $PATH" do
-      stub_which(tee: "tee-path")
-
+      fake_tee = create_executable(rails_root.join("tee"))
+      stub_which(tee: fake_tee.to_s)
       path_set = build_path_set
 
-      expect(path_set.tee).to eq "tee-path"
+      tee = path_set.tee
+
+      expect(tee).to eq(fake_tee).and(be_executable)
     end
   end
 
   describe "#bundler" do
     it "can be overridden" do
-      app = build_app(options: { bundler_path: "bundler-path" })
-
+      fake_bundler = create_executable(rails_root.join("bundler"))
+      app = build_app(options: { bundler_path: fake_bundler.to_s })
       path_set = build_path_set(app: app)
 
-      expect(path_set.bundler).to eq "bundler-path"
+      bundler = path_set.bundler
+
+      expect(bundler).to eq(fake_bundler).and(be_executable)
     end
 
     it "can be inferred from the $PATH" do
-      stub_which(bundler: "bundler-path")
-
+      fake_bundler = create_executable(rails_root.join("bundler"))
+      stub_which(bundler: fake_bundler.to_s)
       path_set = build_path_set
 
-      expect(path_set.bundler).to eq "bundler-path"
+      bundler = path_set.bundler
+
+      expect(bundler).to eq(fake_bundler).and(be_executable)
     end
   end
 
