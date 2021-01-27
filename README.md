@@ -421,7 +421,7 @@ To override this behavior, you can specify [any of Rails' routing options]
 For the sake of this example, override the `controller` and `action` options:
 
 ```rb
-# config/routes
+# config/routes.rb
 
 Rails.application.routes.draw do
   mount_ember_app :frontend, to: "/", controller: "application", action: "index"
@@ -476,13 +476,13 @@ EmberCli.configure do |c|
 end
 ```
 
-Next, mount the applications alongside the rest of Rails' routes:
+Next, mount the applications alongside the rest of Rails' routes. Note that `admin_panel` route is added before the `frontend` route because it's more specific:
 
 ```rb
 # /config/routes.rb
 Rails.application.routes.draw do
-  mount_ember_app :frontend, to: "/"
   mount_ember_app :admin_panel, to: "/admin_panel"
+  mount_ember_app :frontend, to: "/"
 end
 ```
 
@@ -660,8 +660,8 @@ This project supports:
 
 This project supports:
 
-* Ruby versions `>= 2.2.0`
-* Rails versions `>=4.1.x`.
+* Ruby versions `>= 2.5.0`
+* Rails versions `>=5.2.x`.
 
 To learn more about supported versions and upgrades, read the [upgrading guide].
 

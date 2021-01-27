@@ -1,6 +1,33 @@
 master
 ------
 
+0.11.0
+------
+
+* Switch from TravisCI to GitHub Actions for Continuous Integration
+* Redirect Ember routes with paths that don't end in `/` to corresponding paths
+  that end in `/`.
+* Don't route requests to `/rails/active_storage` through the mounted Ember application.
+* Only support for Ruby versions >= 2.5
+* Only support for Rails versions >= 5.2
+
+0.10.0
+------
+
+* Remove `bin/heroku_install` to simplify Heroku setup.
+  To upgrade, remove your project's generated `bin/heroku_install`.
+  Next, execute `rake ember:heroku`. [#544]
+* Generate an empty `yarn.lock` so that Heroku understands that the
+  application's deployment target requires `yarn`. Closes [#538]. [#540]
+* No longer support `rails < 4.2`. [#543]
+* Generate an empty `yarn.lock` so that Heroku understands that the
+  application's deployment target requires `yarn`. Closes [#538]. [#540]
+
+[#543]: https://github.com/thoughtbot/ember-cli-rails/pull/543
+[#544]: https://github.com/thoughtbot/ember-cli-rails/pull/544
+[#538]: https://github.com/thoughtbot/ember-cli-rails/issues/538
+[#540]: https://github.com/thoughtbot/ember-cli-rails/pull/540
+
 0.9.0
 -----
 

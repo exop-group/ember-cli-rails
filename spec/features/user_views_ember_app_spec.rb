@@ -8,7 +8,7 @@ feature "User views ember app", :js do
   end
 
   context "using custom controller" do
-    scenario "rendering with asset helpers" do
+    skip "rendering with asset helpers" do
       visit embedded_path
 
       expect(page).to have_client_side_asset
@@ -33,6 +33,14 @@ feature "User views ember app", :js do
       expect(page).to have_csrf_tags
       expect(page).to have_rails_injected_text
     end
+  end
+
+  scenario "is redirected with trailing slash", js: false do
+    expect(embedded_path).to eq("/asset-helpers")
+
+    visit embedded_path
+
+    expect(current_path).to eq("/asset-helpers/")
   end
 
   def have_client_side_asset

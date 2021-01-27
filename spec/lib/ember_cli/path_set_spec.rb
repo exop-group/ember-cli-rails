@@ -121,7 +121,8 @@ describe EmberCli::PathSet do
     context "when it is missing from the $PATH" do
       context "bower.json exists" do
         it "raises a helpful exception" do
-          create_file(ember_cli_root.join("bower.json"))
+          app = build_app
+          create_file(app_root_for(app).join("bower.json"))
           stub_which(bower: nil)
           path_set = build_path_set
 
@@ -145,12 +146,12 @@ describe EmberCli::PathSet do
 
   describe "#bower_json" do
     it "is a child of #root" do
-      app = build_app(name: "foo")
+      app = build_app
       path_set = build_path_set(app: app)
 
       bower_json = path_set.bower_json
 
-      expect(bower_json).to eq ember_cli_root.join("bower.json")
+      expect(bower_json).to eq app_root_for(app).join("bower.json")
     end
   end
 
@@ -211,13 +212,25 @@ describe EmberCli::PathSet do
     end
 
     context "when the executable isn't installed on the system" do
-      it "returns nil" do
-        stub_which(yarn: nil)
-        path_set = build_path_set
+      context "and yarn is requested" do
+        it "raises a DependencyError" do
+          stub_which(yarn: nil)
+          app = build_app(options: { yarn: true })
+          path_set = build_path_set(app: app)
 
-        yarn = path_set.yarn
+          expect { path_set.yarn }.to raise_error(EmberCli::DependencyError)
+        end
+      end
 
-        expect(yarn).to be_nil
+      context "and yarn is not requested" do
+        it "returns nil" do
+          stub_which(yarn: nil)
+          path_set = build_path_set
+
+          yarn = path_set.yarn
+
+          expect(yarn).to be_nil
+        end
       end
     end
   end
@@ -276,6 +289,51 @@ describe EmberCli::PathSet do
     end
   end
 
+  describe "#cached_directories" do
+    it "includes the full path to the application's node_modules" do
+      app_name = "foo"
+      app = build_app(name: app_name)
+      path_set = build_path_set(app: app)
+
+      cached_directories = path_set.cached_directories
+
+      expect(cached_directories).to include(
+        rails_root.join(app_name, "node_modules"),
+      )
+    end
+
+    context "when bower.json exists" do
+      it "includes the full path to bower_components" do
+        app_name = "foo"
+        app = build_app(name: app_name)
+        app_root = rails_root.join(app_name)
+        path_set = build_path_set(app: app)
+        create_file(app_root.join("bower.json"))
+
+        cached_directories = path_set.cached_directories
+
+        expect(cached_directories).to include(
+          rails_root.join(app_name, "bower_components"),
+        )
+      end
+    end
+
+    context "when bower.json does not exist" do
+      it "does not include the path to bower_components" do
+        app_name = "foo"
+        app = build_app(name: app_name)
+        path_set = build_path_set(app: app)
+
+        cached_directories = path_set.cached_directories
+
+        expect(cached_directories).not_to include(nil)
+        expect(cached_directories).not_to include(
+          rails_root.join(app_name, "bower_components"),
+        )
+      end
+    end
+  end
+
   def create_file(path)
     path.parent.mkpath
     FileUtils.touch(path)
@@ -315,6 +373,10 @@ describe EmberCli::PathSet do
     )
   end
 
+  def app_root_for(app)
+    rails_root.join(app.name)
+  end
+
   def ember_cli_root
     Rails.root.join("tmp", "ember_cli").tap(&:mkpath)
   end
@@ -323,13 +385,15 @@ describe EmberCli::PathSet do
     Rails.root.join("tmp", "rails").tap(&:mkpath)
   end
 
-  around do |example|
+  def remove_temporary_directories
     [rails_root, ember_cli_root].each do |dir|
       if dir.exist?
         FileUtils.rm_rf(dir)
       end
     end
+  end
 
-    example.run
+  before do
+    remove_temporary_directories
   end
 end

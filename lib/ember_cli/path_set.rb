@@ -36,7 +36,7 @@ module EmberCli
     end
 
     def bower_json
-      ember_cli_root.join("bower.json")
+      root.join("bower.json")
     end
 
     def ember
@@ -92,7 +92,16 @@ module EmberCli
 
     def yarn
       if yarn?
-        @yarn ||= path_for_executable("yarn")
+        @yarn ||= path_for_executable("yarn").tap do |yarn|
+          unless File.executable?(yarn.to_s)
+            fail DependencyError.new(<<-MSG.strip_heredoc)
+                EmberCLI has been configured to install NodeJS dependencies with Yarn, but the Yarn executable is unavailable.
+
+                Install it by following the instructions at https://yarnpkg.com/lang/en/docs/install/
+
+            MSG
+          end
+        end
       end
     end
 
@@ -106,6 +115,13 @@ module EmberCli
 
     def bundler
       @bundler ||= path_for_executable("bundler")
+    end
+
+    def cached_directories
+      [
+        node_modules,
+        (bower_components if bower_json.exist?),
+      ].compact
     end
 
     private

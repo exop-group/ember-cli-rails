@@ -2,16 +2,14 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "appraisal"
-gem "rails", "4.2.4"
-gem "pry"
+rails_version = ENV.fetch("RAILS_VERSION", "6.0")
 
-group :development, :test do
-  gem "high_voltage", "~> 3.0.0"
-  gem "rspec-rails", "~> 3.5.0"
+if rails_version == "master"
+  rails_constraint = { github: "rails/rails" }
+else
+  rails_constraint = "~> #{rails_version}.0"
 end
 
-group :test do
-  gem "poltergeist", "~> 1.8.0"
-  gem "codeclimate-test-reporter", "~> 0.6.0", require: nil
-end
+gem "rails", rails_constraint
+gem "high_voltage", "~> 3.0.0"
+gem "webdrivers", "~> 4.0"
