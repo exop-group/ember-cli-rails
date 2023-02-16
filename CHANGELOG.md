@@ -1,6 +1,28 @@
 master
 ------
 
+0.12.1
+------
+
+* Drop explicit dependency to rexml (#602)
+* Remove note for PhantomJS (#604)
+* Allow rspec-rails 6.x (#603)
+* Allow ember-cli-rails-assets < 1.0 (#599)
+* Update webdrivers gem (#600)
+* Disallow rack 3 to be compatible with capybara (#601)
+
+0.12.0
+------
+
+* Redirecting with trailing slash with query parameters
+* Recognize Building notice as not an error
+* Use keyword argument for options
+* Add Ruby 2.7 & 3.0 into CI matrix
+* Add missing gems that removed from stdlibs in Ruby 3.0.0
+* Fix autoload deprecation in Rails 6
+* Drop support for Rails versions 4.2, 5.0, 5.1, and 5.2
+* Drop support for End-of-Lifed Ruby versions 2.3 and 2.4
+
 0.11.0
 ------
 
